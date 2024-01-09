@@ -1,0 +1,177 @@
+---
+title: "Sentiment"
+output: html_document
+date: "2024-01-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+ Getting Args
+```{r}
+args <- commandArgs(trailingOnly = TRUE)
+print(args[1])
+
+data1 = toString(args[1])
+```
+
+ Loading Libraries
+```{r}
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(reshape2)
+library(wordcloud)
+library(plotly)
+```
+
+ reading csv and tokenizeing them keeping using date as sort
+
+```{r}
+
+sample_file = '../data/apple_inc.csv'
+
+df <- read.csv(sample_file)
+
+df <- df %>%
+  group_by(date) %>%
+  # Use unnest_tokens on a temporary column
+  unnest_tokens(word, title, to_lower = TRUE, drop = FALSE) %>%
+  # Separate the unnested words while keeping the original titles
+  unnest(word) %>%
+  # Ungroup the dataframe
+  ungroup()
+    
+```
+
+ Standardizing Dates
+
+```{r}
+    
+standardize_dates <- function(date_str) {
+  # Handle relative dates like '2 days ago', '1 week ago', '23 hours ago', etc.
+  if (grepl("ago", date_str)) {
+    num <- as.numeric(unlist(regmatches(date_str, regexpr("\\d+", date_str))))
+    unit <- ifelse(grepl("day", date_str), "days", 
+                   ifelse(grepl("week", date_str), "weeks",
+                          ifelse(grepl("month", date_str), "months", 
+                                 ifelse(grepl("hour", date_str), "hours", "years"))))
+    standardized_date <- Sys.Date() - num * switch(unit, 
+                                                   days = 1, 
+                                                   weeks = 7, 
+                                                   months = 30, 
+                                                   hours = 1/24, 
+                                                   years = 365)
+  }
+  # Handle full dates like 'Jun 26, 2023'
+  else if (grepl(",", date_str)) {
+    standardized_date <- as.Date(date_str, format="%b %d, %Y")
+  }
+  # Add more conditions as needed for other formats
+  else {
+    standardized_date <- as.Date(date_str) # assuming it's already in a standard format
+  }
+  return(format(standardized_date, "%Y-%m-%d")) # Ensure output is in 'YYYY-MM-DD' format
+}
+
+
+
+
+# Apply the function to your dataframe
+df$standardized_date <- sapply(df$date, standardize_dates)
+```
+
+Filtering positive sentiments
+
+```{r}
+# positive_senti <- get_sentiments("bing") %>%
+#   filter(sentiment == "positive")
+# 
+# df %>%
+#   semi_join(positive_senti) %>%
+#   count(word, sort = TRUE)
+
+
+```
+
+ Filtering All Sentiments
+
+```{r}
+bing <- get_sentiments("bing")
+
+
+df_sentiment <- df %>%
+  inner_join(bing) %>%
+  count(index = standardized_date , word, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+df_sentiment$index <- as.Date(df_sentiment$index, format = "%Y-%m-%d")
+
+```
+
+ Creating Plot based on sentiments
+```{r}
+ggplot(df_sentiment, aes(x = index, y = sentiment)) +
+  geom_bar(stat = "identity", fill = ifelse(df_sentiment$sentiment >= 0, "blue", "red")) +
+  theme_minimal() +
+  labs(x = "Date", y = "Sentiment", title = "Sentiment Over Time") +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+Sample Plot 
+```{r}
+gg <- ggplot(df_sentiment, aes(x = index, y = sentiment)) +
+  # Use geom_col to create stacked bars for positive and negative sentiments
+  geom_col(aes(fill = factor(ifelse(sentiment >= 0, "Positive", "Negative"))), position = "dodge") +
+  # Add word labels
+  geom_text(aes(label = word), vjust = -0.5, position = position_dodge(width = 0.9)) +
+  # Set the color scale
+  scale_fill_manual(values = c("Positive" = "blue", "Negative" = "red")) +
+  # Additional plot formatting
+  theme_minimal() +
+  labs(x = "Date", y = "Sentiment", fill = "Sentiment Type", title = "Sentiment Analysis Over Time") +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Convert to an interactive plot
+ggplotly(gg, tooltip = c("text"))
+
+```
+ Counting most common words on df
+
+```{r}
+counting_words <- df %>%
+  inner_join(bing) %>%
+  count(word, sentiment, sort = TRUE)
+head(counting_words)
+
+```
+
+ Most common word counts plot
+
+```{r}
+counting_words %>%
+ mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+ mutate(word = reorder(word, n)) %>%
+ ggplot(aes(word, n, fill = sentiment))+
+ geom_col() +
+ coord_flip() +
+ labs(y = "Sentiment Score")
+```
+ Word Cloud
+
+```{r}
+df %>%
+ inner_join(bing) %>%
+ count(word, sentiment, sort = TRUE) %>%
+ acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+ comparison.cloud(colors = c("red", "dark green"),
+          max.words = 100)
+```
