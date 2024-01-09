@@ -8,9 +8,10 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from pypdf import PdfReader, PdfWriter
 import os
+import creds
 
-api_key = "0ee96d65e6f16ad26427877b9d892d00d9945b5d"
-api_key2 = "6e10cc0ee9c6ec43cc60169d6087020160ed96b2"
+api_key = creds.api_key
+api_key2 = creds.api_key
 file_name1 = 'data/apple_inc_sentiment.csv'
 
 def give_summary(file_name):
