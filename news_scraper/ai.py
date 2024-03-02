@@ -11,9 +11,6 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
 
-
-api_key = creds.api_key
-api_key2 = creds.api_key
 file_name1 = 'data/apple_inc_sentiment.csv'
 
 def give_summary(file_name):
@@ -35,7 +32,7 @@ def give_summary(file_name):
     
     return full_summary
 
-def generate_text(file):
+def text_generation(file):
 
     summary = give_summary(file)
     company_name = file.replace("_sentiment.csv", "")
