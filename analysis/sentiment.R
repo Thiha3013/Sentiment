@@ -37,6 +37,8 @@ df <- df %>%
   ungroup()
 
 
+
+
 ### Standardizing dates
 
 standardize_dates <- function(date_str) {
@@ -69,8 +71,8 @@ standardize_dates <- function(date_str) {
 df$standardized_date <- sapply(df$date, standardize_dates)
 
 # Filter out dates more than 2 years ago
-df <- df %>%
-  filter(standardized_date > Sys.Date() - years(1) - months(2))
+#df <- df %>%
+#  filter(standardized_date > Sys.Date() - years(1) - months(2))
 
 ###  Filtering All Sentiments
 
@@ -79,9 +81,11 @@ bing <- get_sentiments("bing")
 
 df_sentiment <- df %>%
   inner_join(bing) %>%
-  count(index = standardized_date , word, sentiment) %>%
+  count(index = standardized_date, word, sentiment) %>%
   spread(sentiment, n, fill = 0) %>%
+  {print(.); .} %>% # This will print the data frame at this stage
   mutate(sentiment = positive - negative)
+
 
 df_sentiment$index <- as.Date(df_sentiment$index, format = "%Y-%m-%d")
 
@@ -93,7 +97,7 @@ write.csv(df_sentiment, csv_sentiment_location , row.names=FALSE)
 ggplot(df_sentiment, aes(x = index, y = sentiment)) +
   geom_bar(stat = "identity", fill = ifelse(df_sentiment$sentiment >= 0, "blue", "red")) +
   theme_minimal() +
-  labs(x = "Date", y = "Sentiment", title = "Sentiment Over Time") +
+  labs(x = "Date", y = "Sentiment words", title = "Sentiment Over Time") +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 

@@ -1,14 +1,16 @@
 import pandas as pd
 import sys
-import nlpcloud
 import subprocess
-import textwrap
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from pypdf import PdfReader, PdfWriter
 import os
-import creds
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.prompts import PromptTemplate
+from langchain_community.llms import LlamaCpp
+
 
 api_key = creds.api_key
 api_key2 = creds.api_key
@@ -33,70 +35,65 @@ def give_summary(file_name):
     
     return full_summary
 
+def generate_text(file):
 
-def text_generation(file):
-    company_name = file.replace("_sentiment.csv", "")
-    company_name = company_name.replace("../data/", "")
     summary = give_summary(file)
-    prompt =  f'''
-    Please follow exactly the instructions:
+    company_name = file.replace("_sentiment.csv", "")
+    company_name = company_name.replace("data/", "")
 
-    Read the summary below:
+    template =f"""summary: {summary}
 
-    {summary}
-Structure your response to offer a clear, easy-to-follow narrative. Include the following elements:
+    Response: Structure your response to offer a clear, easy-to-follow narrative. Include the following elements:
 
+    Introduction:
 
-Introduction:
-
-Begin with an overview of the sentiment trend of the company {company_name} observed throughout the timeline.
-Mention the variations in sentiment, indicating periods of positive and negative sentiments.
-
-Monthly Sentiment Analysis:
-
-For each month, identify the prevailing sentiment (positive or negative).
-Extract and highlight the most frequently used sentiment words for each month.
-Compare the sentiment of each month with the previous one, noting significant changes or consistencies.
-
-In-depth Sentiment Shift Analysis:
-
-Pinpoint months where there was a noteworthy shift in sentiment (e.g., from positive to negative or the opposite).
-Delve into possible causes or events that might have triggered these shifts.
-Provide an analysis of how these shifts correlate with specific events or general trends during that period.
-
-Correlation with Notable Events:
-
-Identify key events or news that align with substantial changes in sentiment.
-Analyze the impact of these events on public perception and sentiment, discussing whether the sentiment change was a direct response to these events or influenced by broader factors.
-
-Comprehensive Sentiment Overview:
-
-Summarize the overall sentiment trajectory observed throughout the period.
-Discuss any recurring themes or patterns in public sentiment, linking them to broader social, economic, or political contexts.
-Conclude with a detailed analysis of the company's sentiment as the timeline end, including potential future implications based on past trends.
-
-    '''
+    Start with an overview of the sentiment trend for {company_name} over the observed timeline.
+    Highlight the variations in sentiment, identifying periods of positivity and negativity.
 
 
-    client = nlpcloud.Client("finetuned-llama-2-70b", api_key, gpu=True)
-    text = client.generation(
-        prompt,
-        max_length=4096,
-        length_no_input=True,
-        remove_input=True,
-        end_sequence=None,
-        top_p=1,
-        temperature=0.8,
-        top_k=5,
-        repetition_penalty=1,
-        num_beams=1,
-        num_return_sequences=1,
-        bad_words=None,
-        remove_end_sequence=False
+    Key Sentiment Shifts:
+
+    Identify months with significant sentiment changes (e.g., from positive to negative).
+    Investigate potential triggers for these shifts, considering relevant events or news.
+    Explore the correlation between these shifts and specific occurrences or general trends at those times.
+
+    Correlation with Key Events:
+
+    Pinpoint major events or news coinciding with substantial sentiment changes.
+    Discuss the impact of these events on the sentiment, analyzing if the change was a direct response or influenced by wider factors.
+    
+    Overall Sentiment Summary:
+
+    Provide a summary of the sentiment trajectory over the period.
+    Discuss any patterns or themes in sentiment, relating them to broader contexts.
+    Conclude with an analysis of the current sentiment and potential future implications based on observed trends.
+"""
+    
+    prompt = PromptTemplate.from_template(template)
+
+    # Callbacks support token-wise streaming
+    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+
+    n_gpu_layers = -1  # The number of layers to put on the GPU. The rest will be on the CPU. If you don't know how many layers there are, you can use -1 to move all to GPU.
+    n_batch = 512  # Should be between 1 and n_ctx, consider the amount of RAM of your Apple Silicon Chip.
+
+    llm = LlamaCpp(
+        model_path="/Users/tha/coding/projects/Sentiment/capybarahermes-2.5-mistral-7b.Q4_K_M.gguf",
+        n_gpu_layers=n_gpu_layers,
+        n_ctx=4096,
+        n_batch=n_batch,
+        f16_kv=True,  # MUST set to True, otherwise you will run into problem after a couple of calls
+        callback_manager=callback_manager,
+        max_tokens=4096,
+        temperature=0,
+        verbose=True,  # Verbose is required to pass to the callback manager
     )
-    print(text['generated_text'])
-    return text['generated_text']
+    #summary1 = summary
+    #response = llm_chain.invoke(summary)
+    response = llm.invoke(template)
 
+
+    return(response)
 
 
 def create_pdf_from_text(text, filename):
@@ -181,12 +178,13 @@ def main(file_name):
     open_pdf(existing_pdf)
     print("file is sucessfully generated")
 
-
+"""
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         file_name = str(sys.argv[1])     
         main(file_name)
     else:
         print("No ticker symbol provided")
-
+"""
+main(file_name1)
 

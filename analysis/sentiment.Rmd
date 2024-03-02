@@ -52,6 +52,7 @@ df <- df %>%
 
 ```{r}
     
+
 standardize_dates <- function(date_str) {
   # Handle relative dates like '2 days ago', '1 week ago', '23 hours ago', etc.
   if (grepl("ago", date_str)) {
@@ -78,11 +79,10 @@ standardize_dates <- function(date_str) {
   return(format(standardized_date, "%Y-%m-%d")) # Ensure output is in 'YYYY-MM-DD' format
 }
 
-
-
-
 # Apply the function to your dataframe
 df$standardized_date <- sapply(df$date, standardize_dates)
+
+
 ```
 
 Filtering positive sentiments
@@ -106,9 +106,12 @@ bing <- get_sentiments("bing")
 
 df_sentiment <- df %>%
   inner_join(bing) %>%
-  count(index = standardized_date , word, sentiment) %>%
+  count(index = standardized_date, word, sentiment) %>%
   spread(sentiment, n, fill = 0) %>%
+  {print(.); .} %>% # This will print the data frame at this stage
   mutate(sentiment = positive - negative)
+
+
 
 df_sentiment$index <- as.Date(df_sentiment$index, format = "%Y-%m-%d")
 
