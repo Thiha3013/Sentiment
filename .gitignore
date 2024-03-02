@@ -2,4 +2,4 @@ creds.py
 test.py
 test2.py
 __pycache
-*.gguf
+capybarahermes-2.5-mistral-7b.Q4_K_M.gguf
