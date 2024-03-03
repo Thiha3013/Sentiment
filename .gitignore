@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 creds.py
 test.py
 test2.py
 __pycache
 capybarahermes-2.5-mistral-7b.Q4_K_M.gguf
+=======
+creds.py
+>>>>>>> 127298689d3d49908ad92aafef65201c1ee08d8c
