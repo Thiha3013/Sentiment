@@ -110,23 +110,23 @@ head(counting_words)
 
 ### Plotting word count 
 
-counting_words %>%
-  mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
-  mutate(word = reorder(word, n)) %>%
-  ggplot(aes(word, n, fill = sentiment))+
-  geom_col() +
-  coord_flip() +
-  labs(y = "Sentiment Score")
+# counting_words %>%
+#   mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+#   mutate(word = reorder(word, n)) %>%
+#   ggplot(aes(word, n, fill = sentiment))+
+#   geom_col() +
+#   coord_flip() +
+#   labs(y = "Sentiment Score")
 
 ###  Word Cloud
 
-df %>%
-  inner_join(bing) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
-  comparison.cloud(colors = c("red", "dark green"),
-                   max.words = 100)
- 
+# df %>%
+#   inner_join(bing) %>%
+#   count(word, sentiment, sort = TRUE) %>%
+#   acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+#   comparison.cloud(colors = c("red", "dark green"),
+#                    max.words = 100)
+#  
  #sending all to pdf
  
 dev.off()

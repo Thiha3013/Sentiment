@@ -11,7 +11,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
 
-file_name1 = 'data/apple_inc_sentiment.csv'
+#file_name1 = 'data/apple_inc_sentiment.csv'
 
 def give_summary(file_name):
     df = pd.read_csv(file_name)
@@ -64,6 +64,7 @@ def text_generation(file):
     Provide a summary of the sentiment trajectory over the period.
     Discuss any patterns or themes in sentiment, relating them to broader contexts.
     Conclude with an analysis of the current sentiment and potential future implications based on observed trends.
+
 """
     
     prompt = PromptTemplate.from_template(template)
@@ -175,13 +176,13 @@ def main(file_name):
     open_pdf(existing_pdf)
     print("file is sucessfully generated")
 
-"""
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         file_name = str(sys.argv[1])     
         main(file_name)
     else:
         print("No ticker symbol provided")
-"""
-main(file_name1)
+
+
 
