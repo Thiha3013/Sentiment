@@ -18,8 +18,8 @@ def getNewsData(ticker):
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36"
     }
     response = requests.get(
-        f"https://www.google.com/search?q={name}s&gl=us&tbm=nws&num=100", headers=headers
-    )
+        f"https://www.google.com/search?q={name}s&gl=us&tbm=nws&num=100", headers=headers, 
+    timeout=60)
     soup = BeautifulSoup(response.content, "html.parser")
     news_results = []
  
