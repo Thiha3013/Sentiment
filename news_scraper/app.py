@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QLabel,
 )
+from security import safe_command
 
 class Window(QWidget):
     def __init__(self):
@@ -39,7 +40,7 @@ class Window(QWidget):
     def run_IV(self):
         text = self.textbox.text()
         try:
-            subprocess.run(["python3", "news_scraper/scraper.py", text], check=True)
+            safe_command.run(subprocess.run, ["python3", "news_scraper/scraper.py", text], check=True)
         except subprocess.CalledProcessError:
             print("Error running the script")
         

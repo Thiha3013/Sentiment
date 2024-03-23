@@ -8,6 +8,7 @@ import yfinance
 from bs4 import BeautifulSoup
 import csv
 import pandas as pd
+from security import safe_command
 
 
 def getNewsData(ticker):
@@ -57,7 +58,7 @@ def getNewsData(ticker):
 
 def open_in_r(strFile):
     try:
-        subprocess.run(["Rscript", "analysis/sentiment.R", strFile], check=True)
+        safe_command.run(subprocess.run, ["Rscript", "analysis/sentiment.R", strFile], check=True)
     except subprocess.CalledProcessError:
         print("Error running the script")
 
@@ -69,7 +70,7 @@ def open_from_r(input_name):
 
     if os.path.isfile(input_name):
         try:
-            subprocess.run(["python3", "news_scraper/ai.py", input_name], check=True)
+            safe_command.run(subprocess.run, ["python3", "news_scraper/ai.py", input_name], check=True)
         except subprocess.CalledProcessError:
             print("Error running the script")
         

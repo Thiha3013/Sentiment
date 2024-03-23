@@ -10,6 +10,7 @@ from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
+from security import safe_command
 
 #file_name1 = 'data/apple_inc_sentiment.csv'
 
@@ -161,9 +162,9 @@ def open_pdf(file_path):
     if sys.platform == "win32":
         os.startfile(file_path)  # For Windows
     elif sys.platform == "darwin":
-        subprocess.run(["open", file_path])  # For macOS
+        safe_command.run(subprocess.run, ["open", file_path])  # For macOS
     else:
-        subprocess.run(["xdg-open", file_path])
+        safe_command.run(subprocess.run, ["xdg-open", file_path])
 
 
 def main(file_name):
